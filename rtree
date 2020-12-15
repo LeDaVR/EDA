@@ -1,0 +1,429 @@
+let width = 300;
+let height = 200;
+let B = 4;
+
+function orderx(point1, point2) {
+    if (point1[0] > point2[0])
+        return 1;
+    return -1;
+}
+function ordery(point1, point2) {
+    if (point1[1] > point2[1])
+        return 1;
+    return -1;
+}
+
+function sort1(u, mrbs, childs){
+    let m = u.mbrs;
+    let c = u.childs;
+    let n = m.length;
+        
+    for(let i = 0; i < n; i++) {
+        let min = i;
+        for(let j = i+1; j < n; j++){
+            if(m[j].x < m[min].x) {
+                min=j; 
+            }
+        }
+        mrbs.push(m[min]);
+        childs.push(c[min]);
+        if (min != i) {
+            let tmp = m[i]; 
+            m[i] = m[min];
+            m[min] = tmp;      
+            let tmp2 = c[i]; 
+            c[i] = c[min]; 
+            c[min] - tmp2; 
+        }
+    }
+}
+function sort2(u, mrbs, childs){
+    let m = u.mbrs;
+    let c = u.childs;
+    let n = m.length;
+        
+    for(let i = 0; i < n; i++) {
+        let min = i;
+        for(let j = i+1; j < n; j++){
+            if(m[j].x + m[j].w < m[min].x + m[j].w) {
+                min=j; 
+            }
+        }
+        mrbs.push(m[min]);
+        childs.push(c[min]);
+        if (min != i) {
+            let tmp = m[i]; 
+            m[i] = m[min];
+            m[min] = tmp;      
+            let tmp2 = c[i]; 
+            c[i] = c[min]; 
+            c[min] - tmp2; 
+        }
+    }
+}   
+function sort3(u, mrbs, childs){
+    let m = u.mbrs;
+    let c = u.childs;
+    let n = m.length;
+        
+    for(let i = 0; i < n; i++) {
+        let min = i;
+        for(let j = i+1; j < n; j++){
+            if(m[j].y < m[min].y) {
+                min=j; 
+            }
+        }
+        mrbs.push(m[min]);
+        childs.push(c[min]);
+        if (min != i) {
+            let tmp = m[i]; 
+            m[i] = m[min];
+            m[min] = tmp;      
+            let tmp2 = c[i]; 
+            c[i] = c[min]; 
+            c[min] - tmp2; 
+        }
+    }
+}
+function sort4(u, mrbs, childs){
+    let m = u.mbrs;
+    let c = u.childs;
+    let n = m.length;
+        
+    for(let i = 0; i < n; i++) {
+        let min = i;
+        for(let j = i+1; j < n; j++){
+            if(m[j].y + m[j].h < m[min].y + m[j].h ) {
+                min=j; 
+            }
+        }
+        mrbs.push(m[min]);
+        childs.push(c[min]);
+        if (min != i) {
+            let tmp = m[i]; 
+            m[i] = m[min];
+            m[min] = tmp;      
+            let tmp2 = c[i]; 
+            c[i] = c[min]; 
+            c[min] - tmp2; 
+        }
+    }
+}
+
+
+class RTree {
+    constructor(n) {
+        this.capacity = n;
+        this.i = -1;
+        this.parent = null;
+        this.mbrs = [];
+        this.isleaf = false;
+        this.points = [];
+        this.childs = [];
+    }
+}
+
+let rtree = new RTree(B);
+rtree.isleaf = true;
+
+function insert(u, p) {
+    if (u.isleaf) {
+        u.points.push(p);
+        if (u.parent) {
+            u.parent.mbrs[u.i] = get_mbr_l(u.points);
+        }
+        if (u.points.length > u.capacity)
+        {
+            handle_overflow(u);
+        }
+    }
+    else {
+        v = chosee_subtree(u, p);
+        insert(v, p);
+    }
+}
+
+function handle_overflow(u) {
+
+    let u1 = new RTree(B);
+    let u2 = new RTree(B);
+    if (u.isleaf)
+        split_l(u, u1, u2);
+    else
+        split_i(u, u1, u2);
+    if (u == rtree) {
+        rtree = new RTree(B);
+        add_child(rtree, u1);
+        add_child(rtree, u2);
+    }
+    else {
+        let w = u.parent;
+        u.points = u1.points;
+        u.mbrs = u1.mbrs;
+        u.childs = u1.childs;
+        if(u.isleaf)
+            w.mbrs[u.i] = get_mbr_l(u.points);
+        else
+            w.mbrs[u.i] = get_mbr_i(u.mbrs);
+        add_child(w, u2);
+        if (w.childs.length > w.capacity)
+            handle_overflow(w);
+        
+    }
+}
+
+function split_l(u, u1, u2) {
+    let m = u.points.length;
+    let points = u.points;
+    let min_p = 9999999999;
+    min1 = []
+    min2 = []
+    points.sort(orderx);
+    for (let i = Math.ceil(0.4 * m); i <= m - Math.ceil(0.4 * m); i++) {
+        aux1 = [];
+        aux2 = [];
+        for (let j = 0; j < i; j++)
+            aux1.push(points[j]);
+        for (let j = i; j < m; j++)
+            aux2.push(points[j]);
+        let suma = get_mbr_l(aux1).get_perimetro() + get_mbr_l(aux2).get_perimetro();
+        if (min_p > suma) {
+            min_p = suma;
+            min1 = aux1;
+            min2 = aux2;
+        }
+    }
+    points.sort(ordery);
+    for (let i = Math.ceil(0.4 * m); i <= m - Math.ceil(0.4 * m); i++) {
+        aux1 = [];
+        aux2 = [];
+        for (let j = 0; j < i; j++)
+            aux1.push(points[j]);
+        for (let j = i; j < m; j++)
+            aux2.push(points[j]);
+        let suma = get_mbr_l(aux1).get_perimetro() + get_mbr_l(aux2).get_perimetro();
+        if (min_p > suma) {
+            min_p = suma;
+            min1 = aux1;
+            min2 = aux2;
+        }
+    }
+    u1.points = min1;
+    u1.isleaf = true;
+    u2.points = min2;
+    u2.isleaf = true;
+}
+
+function split_i(u, u1, u2) {
+    // console.log('split i');
+    let m = u.mbrs.length;
+    let min_p = 9999999999;
+    min1 = [];
+    min2 = [];
+    c_min1 = [];
+    c_min2 = [];
+    mbrs = [];
+    childs = [];
+    sort1(u, mbrs, childs);
+    // console.log('mbrs and child');
+    // console.log(mbrs);
+    // console.log(childs);
+    // console.log('gg');
+    for (let i = Math.ceil(0.4 * m); i <= m - Math.ceil(0.4 * m); i++) {
+        aux1 = [];
+        aux2 = [];
+        c_aux1 = [];
+        c_aux2 = [];
+        for (let j = 0; j < i; j++){
+            aux1.push(mbrs[j]);
+            c_aux1.push(childs[j]);
+        }
+        for (let j = i; j < m; j++){
+            aux2.push(mbrs[j]);
+            c_aux2.push(childs[j]);
+        }
+            
+        let suma = get_mbr_i(aux1).get_perimetro() + get_mbr_i(aux2).get_perimetro();
+        if (min_p > suma) {
+            min_p = suma;
+            min1 = aux1;
+            min2 = aux2;
+            c_min1 = c_aux1;
+            c_min2 = c_aux2;
+        }
+    }
+    sort2(u, mbrs, childs);
+    for (let i = Math.ceil(0.4 * m); i <= m - Math.ceil(0.4 * m); i++) {
+        aux1 = [];
+        aux2 = [];
+        c_aux1 = [];
+        c_aux2 = [];
+        for (let j = 0; j < i; j++){
+            aux1.push(mbrs[j]);
+            c_aux1.push(childs[j]);
+        }
+        for (let j = i; j < m; j++){
+            aux2.push(mbrs[j]);
+            c_aux2.push(childs[j]);
+        }
+            
+        let suma = get_mbr_i(aux1).get_perimetro() + get_mbr_i(aux2).get_perimetro();
+        if (min_p > suma) {
+            min_p = suma;
+            min1 = aux1;
+            min2 = aux2;
+            c_min1 = c_aux1;
+            c_min2 = c_aux2;
+        }
+    }
+    sort3(u, mbrs, childs);
+    for (let i = Math.ceil(0.4 * m); i <= m - Math.ceil(0.4 * m); i++) {
+        aux1 = [];
+        aux2 = [];
+        c_aux1 = [];
+        c_aux2 = [];
+        for (let j = 0; j < i; j++){
+            aux1.push(mbrs[j]);
+            c_aux1.push(childs[j]);
+        }
+        for (let j = i; j < m; j++){
+            aux2.push(mbrs[j]);
+            c_aux2.push(childs[j]);
+        }
+            
+        let suma = get_mbr_i(aux1).get_perimetro() + get_mbr_i(aux2).get_perimetro();
+        if (min_p > suma) {
+            min_p = suma;
+            min1 = aux1;
+            min2 = aux2;
+            c_min1 = c_aux1;
+            c_min2 = c_aux2;
+        }
+    }
+    sort4(u, mbrs, childs);
+    for (let i = Math.ceil(0.4 * m); i <= m - Math.ceil(0.4 * m); i++) {
+        aux1 = [];
+        aux2 = [];
+        c_aux1 = [];
+        c_aux2 = [];
+        for (let j = 0; j < i; j++){
+            aux1.push(mbrs[j]);
+            c_aux1.push(childs[j]);
+        }
+        for (let j = i; j < m; j++){
+            aux2.push(mbrs[j]);
+            c_aux2.push(childs[j]);
+        }
+            
+        let suma = get_mbr_i(aux1).get_perimetro() + get_mbr_i(aux2).get_perimetro();
+        if (min_p > suma) {
+            min_p = suma;
+            min1 = aux1;
+            min2 = aux2;
+            c_min1 = c_aux1;
+            c_min2 = c_aux2;
+        }
+    }
+    // console.log('split_i3');
+    u1.childs = c_min1;
+    u2.childs = c_min2;
+    u1.mbrs = min1;
+    u2.mbrs = min2;
+
+    // console.log(u1);
+    // console.log(u2);
+}
+
+
+function add_child(u, v) {
+    // console.log('add child');
+    u.childs.push(v);
+    u.childs[u.childs.length - 1].parent = u;
+    u.childs[u.childs.length - 1].i = u.childs.length - 1;
+    let mbr;
+    if (v.isleaf)
+        mbr = get_mbr_l(v.points);
+    else
+        mbr = get_mbr_i(v.mbrs);
+
+        // console.log(v);
+    u.mbrs.push(mbr);
+}
+
+function get_mbr_l(v) {
+    x1 = 999;
+    y1 = 999;
+    x2 = -1;
+    y2 = -1;
+    for (let p of v) {
+        if (x1 > p[0])
+            x1 = p[0];
+        if (y1 > p[1])
+            y1 = p[1];
+        if (x2 < p[0])
+            x2 = p[0];
+        if (y2 < p[1])
+            y2 = p[1];
+    }
+    if(x1 == 999)
+        return [-1];
+    else
+        return new Rectangle(x1, y1, x2 - x1, y2 - y1);
+}
+
+function get_mbr_i(v) {
+    x1 = 999;
+    y1 = 999;
+    x2 = -1;
+    y2 = -1;
+    for (let mbr of v) {
+        if (x1 > mbr.x)
+            x1 = mbr.x;
+        if (y1 > mbr.y)
+            y1 = mbr.y;
+        if (x2 < mbr.x + mbr.w)
+            x2 = mbr.x + mbr.w;
+        if (y2 < mbr.y + mbr.h)
+            y2 = mbr.y + mbr.h;
+    }
+    if(x1 == 999)
+        return [-2];
+    else
+        return new Rectangle(x1, y1, x2 - x1, y2 - y1);
+}
+
+
+function chosee_subtree(u, p) {
+    min_perimetro = get_min_p(u.mbrs[0], p);
+    result = 0;
+    for (let i = 1; i < u.childs.length; i++) {
+        if (get_min_p(u.mbrs[i], p) < min_perimetro) {
+            min_perimetro = get_min_p(u.mbrs[i], p);
+            result = i;
+        }
+    }
+    return u.childs[result];
+}
+
+function get_min_p(mbr, p) {
+    let w = (p[0] - mbr.w > mbr.x) ? p[0] - mbr.x : mbr.x - p[0] + mbr.w;
+    let h = (p[1] - mbr.h > mbr.y) ? p[1] - mbr.y : mbr.y - p[1] + mbr.h;
+    return (w + h) * 2;
+}
+
+
+
+
+function range_query(u, r, found) {
+    if (u.isleaf) {
+        for (let p in u.points)
+            if (r.contains(p))
+                found.push(p);
+    }
+    else
+        for (let i = 0; i < u.childs.length; i++)
+            if (u.mbrs[i].intersects(r))
+                this.range_query(u.childs[i], r, found);
+}
+
+
